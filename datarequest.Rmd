@@ -1,0 +1,93 @@
+---
+title: "Data Request Form"
+author: "Matthew Spencer"
+date: "2023-10-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# install.packages("devtools")
+#devtools::install_github("daattali/shinyforms")
+
+library(shiny)
+library(shinyforms)
+
+# Define the first form: basic information
+basicInfoForm <- list(
+  id = "basicinfo",
+  questions = list(
+    list(id = "name", type = "text", title = "Name", mandatory = TRUE),
+    list(id = "email", type = "text", title = "Email", mandatory = TRUE),
+    list(id = "costcentre", type = "text", title = "Cost Centre", mandatory = TRUE), 
+    list(id = "priority", type = "text", title = "Requested Due Date", hint = "Subject to capacity and priorities", mandatory = TRUE),
+    list(id = "request", type = "text", title = "Request", mandatory = TRUE),
+    list(id = "impact", type = "text", title = "The impact to people in our care", mandatory = TRUE), 
+    list(id = "outcomes", type = "text", title = "How this request improves equity and outcomes for Māori and Pasifika", mandatory = TRUE),
+    list(id = "adhoc", type = "checkbox", title = "This is a one time request", hint = "One time requests will not be repeated without an SLT-approved commissioning document and/or funding."),
+    list(id = "ongoing", type = "checkbox", title = "Data will need to be delivered more than once", hint = "Ongoing mahi requires your cost centre to bill ongoing project expenses as well as an SLT-approved commissioning document."),
+    list(id = "approved", type = "checkbox", title = "Approved by Health SLT or ELT"), 
+    list(id = "approved2", type = "checkbox", title = "Mandated by Official Information Act")
+  ),
+  storage = list(
+    type = STORAGE_TYPES$FLATFILE,
+    path = "responses"
+  ),
+  name = "Personal info",
+  password = "shinyforms",
+  reset = TRUE,
+  validations = list(
+    list(condition = "nchar(input$name) >= 3",
+         message = "Name must be at least 3 characters"),
+    list(condition = "nchar(input$impact) >= 20", 
+         message = "Please provide more detail about the impact this mahi will have to support improving health outcomes and equity."), 
+    list(condition = "nchar(input$request) >= 30", 
+         message = "Please provide more detail about your request."),
+    list(condition = "nchar(input$costcentre) >= 4",
+         message = "Cost Centre must be at least 4 characters,"),
+    list(condition = "input$approved == TRUE, input$approved2 == TRUE",
+         message = "If mahi is not commissioned by Health SLT, it must be mandated by the Official Information Act."),
+    list(condition = "input$approved == TRUE", 
+        message = "If mahi is not mandated by OIA, it must be commissioned by Health SLT.")
+  )
+)
+
+# Define the second form: 
+otherFormInfo <- list(
+  id = "otherform",
+  questions = list(
+    list(id = "name", type = "text", title = "Name", mandatory = TRUE),
+    list(id = "email", type = "text", title = "Email", mandatory = TRUE),
+    list(id = "request", type = "text", title = "Request", mandatory = TRUE, hint = "This form is for data that is nice to have but is not a priority. Logging this request helps us to keep business needs in mind for future consideration or for innovation projects.")
+  ),
+  storage = list(
+    type = STORAGE_TYPES$FLATFILE,
+    path = "other"
+  ),
+  multiple = FALSE
+)
+
+ui <- fluidPage(
+  h1("Health Insights & Analytics Data Request Form"),
+  tabsetPanel(
+    tabPanel(
+      "Data Request",
+      formUI(basicInfoForm)
+    ),
+    tabPanel(
+      "Other",
+      formUI(otherFormInfo)
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  formServer(basicInfoForm)
+  formServer(otherFormInfo)
+}
+
+shinyApp(ui = ui, server = server)
+````
